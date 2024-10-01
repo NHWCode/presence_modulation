@@ -15,11 +15,11 @@ nlp = pipeline("sentiment-analysis")
 openai.api_key = 'key'  
 
 # Load the CNN model for ambient sound detection
-model = load_model(r"C:\Users\s448160\OneDrive - University of Canberra - STAFF\PhD\Studies\HRI\CIMFSMS\3 Classes\Ambient Sound\emergency_model.h5")
-input_shape = model.input_shape[1:]  # Exclude the batch dimension
+model = load_model(r"Path to CNN model\emergency_model.h5")
+input_shape = model.input_shape[1:]
 
-# Load the Naive Bayes model for final emergency classification
-nb_model = joblib.load(r"C:\Users\s448160\OneDrive - University of Canberra - STAFF\PhD\Studies\HRI\CIMFSMS\3 Classes\NB\1000_NB_model.joblib")
+# Load the Naive Bayes model for final classification
+nb_model = joblib.load(r"Path to Naive Bayes model\NB_model.joblib")
 
 # Function to extract MFCCs from real-time audio for ambient sound classification
 def preprocess_audio(audio, sr, n_mfcc=40, n_fft=2048, hop_length=512, fixed_length=200):
@@ -58,8 +58,6 @@ def classify_real_time_audio(model, input_shape, sr=16000):
     confidence = prediction[0][predicted_class]
 
     class_labels = ['Alarmed', 'Social', 'Disengaged']
-
-    #print(predicted_class, class_labels[predicted_class], confidence)
 
     if class_labels[predicted_class] == 'Alarmed':
         confidence_ambient = confidence*0.3
@@ -128,7 +126,6 @@ def listen_and_process():
 
         # Display the results
         print(f"Ambient: {ambient_label} (Conf: {ambient_conf:.2f}), Speech: {speech_label} (Keyword Conf: {keyword_conf:.2f}) (Sentiment Conf: {sentiment_conf: .2f})")
-    #    print(f"Final Context: {context_label}\n")
         print(f"Final Context: {final_label}\n")
         time.sleep(3)  # Wait for 3 seconds before repeating
 
