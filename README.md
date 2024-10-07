@@ -19,6 +19,12 @@ This proect is implemented for Pepper robot (Softbank Robotics) and uses Choreog
 2. cd presence_modulation
 3. pip install -r requirements.txt    # For dependencies
 
+# File Details
+1. Folder: context_identification
+    - Contains context identification and presence modulation related files
+2. Folder:presence_actions
+    - Contains Pepper's predefined behaviours for each state
+
 # Usage
 
 Follow below steps to run the Pepper robot with context identification and presence modulation (speech & behaviour):
