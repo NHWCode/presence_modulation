@@ -1,3 +1,26 @@
+# MIT License
+# 
+# Copyright (c) [2024] [Nipuni Hansika Wijesinghe]
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+#Import relevant libraries
 import pyaudio
 import numpy as np
 import librosa
@@ -14,48 +37,30 @@ import qi
 from playsound import playsound
 from dotenv import load_dotenv
 from tensorflow.python.client import device_lib
-import signal 
 from openai import OpenAI
 
-print(device_lib.list_local_devices())
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-# Creating the connection
+# Connect Pepper robot
 pepper = Connection()
-session = pepper.connect('10.0.0.244', '9559')
-#session = pepper.connect('127.0.0.1', '43759')
+session = pepper.connect(IP address, port)
 
 # Create a proxy to the AL services
 behavior_mng_service = session.service("ALBehaviorManager")
 tts_service = session.service("ALTextToSpeech")
 
-os.chdir("/home/hdr-student/Downloads/Final")
-# Load environment variables from .env file
-load_dotenv()
+os.chdir("Add the current folder")
 
 # Initialize OpenAI client
-client = OpenAI(api_key=(''))
+client = OpenAI(api_key=('Add the whisper API key'))
 
-# Load a pre-trained model for sentiment analysis
+# Load pre-trained model for sentiment analysis
 nlp = pipeline("sentiment-analysis")
 
 # Load the CNN model for ambient sound detection
-model = load_model(r"/home/hdr-student/Downloads/Final/emergency_model.h5")
-input_shape = model.input_shape[1:]  # Exclude the batch dimension
+model = load_model("Add the trained CNN model - model.h5")
+input_shape = model.input_shape[1:] 
 
-# Load the Naive Bayes model for final emergency classification
-nb_model = joblib.load(r"/home/hdr-student/Downloads/Final/NB_model.joblib")
-
-# Signal handler to gracefully stop Pepper when the script stops
-def signal_handler(sig, frame):
-    print("Stopping Pepper's behaviors...")
-    behavior_mng_service.stopAllBehaviors()
-    print("Shutting down script.")
-    exit(0)
-
-# Register signal handler
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+# Load the trained Naive Bayes model for final state classification
+nb_model = joblib.load(""Add the trained NB model - NB_model.joblib")
 
 # Function to generate the prompt for Pepper
 def generate_gpt_prompt(final_label, transcription):
@@ -85,7 +90,7 @@ def generate_gpt_prompt(final_label, transcription):
     
     return generated_prompt
 
-# Play an animation and speak
+# Play a state relevant behaviour and speak
 def animation(final_label, prompt_text):
     behavior_mng_service.stopAllBehaviors()
     
@@ -108,7 +113,7 @@ def preprocess_audio(audio, sr, n_mfcc=40, n_fft=2048, hop_length=512, fixed_len
 
     return mfccs
 
-# Function to classify audio (ambient sound)
+# Function to classify ambient sound
 def classify_real_time_audio(model, input_shape, sr=16000):
     p = pyaudio.PyAudio()
     chunk_size = 1024
@@ -133,14 +138,6 @@ def classify_real_time_audio(model, input_shape, sr=16000):
 
     class_labels = ['Alarmed', 'Social', 'Disengaged']
 
-    # Confidence adjustment based on the class
-    if class_labels[predicted_class] == 'Alarmed':
-        confidence_ambient = confidence * 0.3
-    elif class_labels[predicted_class] == 'Social':
-        confidence_ambient = confidence * 0.7
-    else:
-        confidence_ambient = confidence * 0.2
-
     # Save recorded audio as mic.wav
     with wave.open("mic.wav", "wb") as wf:
         wf.setnchannels(1)
@@ -154,7 +151,6 @@ def classify_real_time_audio(model, input_shape, sr=16000):
 def process_speech_to_text_and_sentiment():
     file_path = "mic.wav"
     
-    # Assuming you're using OpenAI's Whisper API for speech-to-text
     with open(file_path, "rb") as audio_file:
         transcription = client.audio.transcriptions.create(
             model="whisper-1",
@@ -195,7 +191,7 @@ def process_speech_to_text_and_sentiment():
 
 # Real-time listener and processor
 def listen_and_process():
-    sr = 16000  # Sample rate
+    sr = 16000 
     while True:
         # Step 1: Record and classify ambient sound
         ambient_class, ambient_conf, ambient_label = classify_real_time_audio(model, input_shape, sr=sr)
@@ -214,11 +210,11 @@ def listen_and_process():
         prompt_text = generate_gpt_prompt(final_label, transcription_text)
         animation(final_label, prompt_text)
 
-        # Check if the user pressed 'q' to quit
+        # Press 'q' to quit Pepper
         user_input = input("Press 'q' to quit or any other key to continue: ").lower()
         if user_input == 'q':
             print("Stopping Pepper's behaviors...")
-            behavior_mng_service.stopAllBehaviors()  # Stop all ongoing behaviors
+            behavior_mng_service.stopAllBehaviors()  
             print("Quitting...")
             break
 
@@ -226,7 +222,7 @@ def listen_and_process():
 def classify_context(ambient_confidence, keyword_confidence, sentiment_confidence):
     X = np.array([[ambient_confidence, keyword_confidence, sentiment_confidence]])
 
-    ## Get the predicted class and the corresponding probability for each class
+    # Get the predicted class and the corresponding probability for each class
     combined_class = nb_model.predict(X)[0]
     class_probs = nb_model.predict_proba(X)[0]
     
