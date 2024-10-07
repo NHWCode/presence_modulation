@@ -27,13 +27,13 @@ Follow below steps to run the Pepper robot with context identification and prese
 3. Open "pepper_presence_modulation.py"
 4. Add ip address and port for physical Pepper
 5. Include relevant paths for CNN model (model.h5), NB model (NB_model.joblib).
-6. Add whisper key
+6. Add whisper API key
 7. Run command in the terminal: python pepper_presence_modulation.py
 
 Follow below steps to run the context identification module separately:
 1. Complete installation
 2. Open "context_classifier.py"
-3. Add whisper key
+3. Add whisper API key
 4. Include relevant paths for CNN model (model.h5), NB model (NB_model.joblib).
 5. Run command in the terminal: python context_classifier.py
 
