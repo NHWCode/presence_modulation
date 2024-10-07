@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+#Import relevant libraries
 import pyaudio
 import numpy as np
 import librosa
@@ -32,16 +33,18 @@ from transformers import pipeline
 import joblib
 from tensorflow.keras.models import load_model
 
-# Load a pre-trained model for sentiment analysis
+# Load pre-trained model for sentiment analysis
 nlp = pipeline("sentiment-analysis")
+
+# Add whisper API key
 openai.api_key = 'key'  
 
 # Load the CNN model for ambient sound detection
-model = load_model(r"Path to CNN model\emergency_model.h5")
-input_shape = model.input_shape[1:]
+model = load_model(r"Path for trained CNN model - model.h5")
+input_shape = model.input_shape[1:] 
 
-# Load the Naive Bayes model for final classification
-nb_model = joblib.load(r"Path to Naive Bayes model\NB_model.joblib")
+# Load the trained Naive Bayes model for final state classification
+nb_model = joblib.load(r"Path for trained Naive Bayes model - NB_model.joblib")
 
 # Function to extract MFCCs from real-time audio for ambient sound classification
 def preprocess_audio(audio, sr, n_mfcc=40, n_fft=2048, hop_length=512, fixed_length=200):
@@ -56,7 +59,7 @@ def preprocess_audio(audio, sr, n_mfcc=40, n_fft=2048, hop_length=512, fixed_len
     
     return mfccs
 
-# Function to classify audio (ambient sound)
+# Function to classify ambient sound
 def classify_real_time_audio(model, input_shape, sr=16000):
     p = pyaudio.PyAudio()
     chunk_size = 1024
@@ -88,8 +91,7 @@ def classify_real_time_audio(model, input_shape, sr=16000):
     else: 
         confidence_ambient = confidence*0.2
         
-
-    # Save recorded audio as mic.wav
+    # Save recorded real-time audio as mic.wav
     with wave.open("mic.wav", "wb") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(p.get_sample_size(pyaudio.paFloat32))
@@ -131,7 +133,7 @@ def process_speech_to_text_and_sentiment():
     if identified and (sentiment_label == 'POSITIVE'):
         return 1, 1-sentiment_score, 0.4, "Social"
     if not identified and (sentiment_label == 'POSITIVE'):
-        return 1, 1 - sentiment_score, 0.35, "Social"
+        return 1, 1-sentiment_score, 0.35, "Social"
 
 # Real-time listener and processor
 def listen_and_process():
@@ -147,11 +149,11 @@ def listen_and_process():
         context_label, final_label = classify_context(ambient_conf, keyword_conf, sentiment_conf)
 
         # Display the results
-        print(f"Ambient: {ambient_label} (Conf: {ambient_conf:.2f}), Speech: {speech_label} (Keyword Conf: {keyword_conf:.2f}) (Sentiment Conf: {sentiment_conf: .2f})")
+#        print(f"Ambient: {ambient_label} (Conf: {ambient_conf:.2f}), Speech: {speech_label} (Keyword Conf: {keyword_conf:.2f}) (Sentiment Conf: {sentiment_conf: .2f})")
         print(f"Final Context: {final_label}\n")
-        time.sleep(3)  # Wait for 3 seconds before repeating
+        time.sleep(3)  
 
-# Function to combine the two models using Naive Bayes for context classification and print confidence
+# Function to combine the two models using Naive Bayes for context classification
 def classify_context(ambient_confidence, keyword_confidence, sentiment_confidence):
     X = np.array([[ambient_confidence, keyword_confidence, sentiment_confidence]])
     
