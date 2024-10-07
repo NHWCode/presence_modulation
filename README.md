@@ -15,9 +15,9 @@ This proect is implemented for Pepper robot (Softbank Robotics) and uses Choreog
 
 # Installation
 
-git clone https://github.com/NHWCode/presence_modulation.git
-cd presence_modulation
-pip install -r requirements.txt    # For dependencies
+1. git clone https://github.com/NHWCode/presence_modulation.git
+2. cd presence_modulation
+3. pip install -r requirements.txt    # For dependencies
 
 # Usage
 
